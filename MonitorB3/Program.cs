@@ -22,7 +22,6 @@ public class SmtpConfig
     public string ApiKey { get; set; } = string.Empty;
 }
 
-// O ponto de entrada da aplicação precisa ser assíncrono para usar 'await'
 public class Program
 {
     public static async Task Main(string[] args)
@@ -234,3 +233,4 @@ public class Program
         Console.WriteLine($"----------------------------------------------------------------------");
     }
 }
+
