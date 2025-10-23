@@ -17,9 +17,7 @@ Para executar este projeto, você precisará ter o .NET SDK instalado em sua má
 2. Configurar o Arquivo .env (Credenciais)
 Crie um arquivo chamado .env na raiz do projeto (na mesma pasta do MonitorB3.csproj), ele vai armazenar as credenciais de email (o .gitignore já está configurado para ignorá-lo).
 - Preencha o arquivo com suas credenciais de e-mail e a chave da API:
-# Chave da API para consulta de cotações (brapi.dev)
 SmtpConfig__ApiKey="SUA_CHAVE_AQUI"
-
 SmtpConfig__FromEmail="SEU_EMAIL_DE_ENVIO@gmail.com"
 SmtpConfig__Username="SEU_EMAIL_DE_ENVIO@gmail.com"
 SmtpConfig__Password="SUA_SENHA_DE_APP_AQUI"
