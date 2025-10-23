@@ -3,8 +3,8 @@ using System.Text.Json;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 
-// --- 1. Classes de Configuração e Dados ---
-// Estrutura para desserializar o JSON de resposta da API (ex: brapi)
+// 1. Classes de Configuração e Dados
+// Estrutura para desserializar o JSON de resposta da API (usamos brapi)
 public record CotacaoResult(decimal regularMarketPrice, string symbol);
 public record CotacaoResponse(CotacaoResult[] results);
 
@@ -16,7 +16,9 @@ public class SmtpConfig
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
-    public string ToEmail { get; set; } = string.Empty;
+
+    // Agora estamos passando email como parâmetro!
+    public string ToEmail { get; set; } = string.Empty; 
     public string ApiKey { get; set; } = string.Empty;
 }
 
@@ -25,17 +27,27 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Env.Load(); 
+        Env.Load(); // carregando .env para pegar a key da API + email de envio
 
-        // --- 2. Validação e Leitura de Parâmetros de Linha de Comando ---
-        if (args.Length != 3)
+        // 2. Validação e Leitura de Parâmetros de Linha de Comando
+        // quer 4 parâmetros: ativo, preço de venda, preço de compra e email de destino
+        if (args.Length != 4)
         {
-            Console.WriteLine("Uso: MonitorB3 <Ativo> <PrecoVenda> <PrecoCompra>");
-            Console.WriteLine("Exemplo: dotnet run -- PETR4 30.00 25.00");
+            Console.WriteLine("Uso: MonitorB3 <Ativo> <PrecoVenda> <PrecoCompra> <EmailDestino>");
+            Console.WriteLine("Exemplo: dotnet run -- PETR4 30.00 25.00 exemplo@dominio.com");
             return;
         }
 
+        // Pegando informações dos argumentos
         string ativo = args[0].ToUpper();
+        string emailDestino = args[3].ToLower();
+        
+        // Valida o e-mail (simplesmente verificando se contém '@')
+        if (!emailDestino.Contains('@') || !emailDestino.Contains('.'))
+        {
+            Console.WriteLine($"Erro: Email de Destino inválido: {emailDestino}");
+            return;
+        }
         
         // Uso de InvariantCulture para garantir que o parse decimal funcione em diferentes configurações regionais (ponto ou vírgula)
         if (!decimal.TryParse(args[1], System.Globalization.CultureInfo.InvariantCulture, out decimal precoVenda) || precoVenda <= 0)
@@ -50,7 +62,7 @@ public class Program
             return;
         }
 
-        // --- 3. Carregamento do Arquivo de Configuração (appsettings.json) ---
+        // 3. Carregamento do Arquivo de Configuração (via appsettings.json)
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -58,6 +70,12 @@ public class Program
             .Build();
 
         var smtpConfig = configuration.GetSection("SmtpConfig").Get<SmtpConfig>();
+        
+        // define o e-mail de destino lido da linha de comando
+        if (smtpConfig != null)
+        {
+            smtpConfig.ToEmail = emailDestino;
+        }
 
         if (smtpConfig == null || string.IsNullOrEmpty(smtpConfig.ToEmail) || string.IsNullOrEmpty(smtpConfig.ApiKey))
         {
@@ -65,7 +83,7 @@ public class Program
             return;
         }
 
-        // --- 4. Loop de Monitoramento (Core da Aplicação) ---
+        // 4. Loop de Monitoramento
         TimeSpan intervalo = TimeSpan.FromSeconds(30);
 
         Console.WriteLine($"----------------------------------------------------------------------");
@@ -96,13 +114,11 @@ public class Program
         }
     }
 
-    // --- 5. Lógica de Obtenção da Cotação ---
-    // Usando a API brapi como exemplo
+    // 5. Lógica de Obtenção da Cotação
     private static async Task<decimal> ObterCotacao(string ativo, string apiKey)
     {
         string apiUrl = $"https://brapi.dev/api/quote/{ativo}?token={apiKey}";
         
-        // Recomendado: usar HttpClientFactory em aplicações reais. Aqui, usamos o 'using var' para simplicidade.
         using (HttpClient client = new HttpClient())
         {
             try
@@ -146,7 +162,7 @@ public class Program
         }
     }
 
-    // --- 6. Lógica de Verificação e Gerenciamento de Alertas ---
+    // 6. Lógica de Verificação e Gerenciamento de Alertas
     private static void VerificarLimites(string ativo, decimal precoAtual, decimal precoVenda, decimal precoCompra, SmtpConfig config, ref bool alertaVendaDisparado, ref bool alertaCompraDisparado)
     {
         // Alerta de VENDA (Preço subiu)
@@ -182,7 +198,7 @@ public class Program
         }
     }
 
-    // --- 7. Lógica de Envio de E-mail ---
+    // 7. Lógica de Envio de E-mail
     private static void EnviarEmailAlerta(string assunto, string corpo, SmtpConfig config)
     {
         Console.WriteLine($"\n*** Disparando Alerta por E-mail: {assunto} ***");
