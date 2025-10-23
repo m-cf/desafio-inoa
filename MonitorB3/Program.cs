@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using DotNetEnv;
+using System.Text.Json;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 
@@ -24,6 +25,8 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        Env.Load(); 
+
         // --- 2. Validação e Leitura de Parâmetros de Linha de Comando ---
         if (args.Length != 3)
         {
@@ -51,6 +54,7 @@ public class Program
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables() 
             .Build();
 
         var smtpConfig = configuration.GetSection("SmtpConfig").Get<SmtpConfig>();
