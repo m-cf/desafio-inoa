@@ -1,4 +1,3 @@
-using System;
 using System.Net.Mail;
 using MonitorB3.App.Interfaces;
 using MonitorB3.App.Models;

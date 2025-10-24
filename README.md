@@ -4,6 +4,17 @@ Repositório criado para o desafio do PS da INOA.
 # O que é o desafio?
 Um aplicativo console em C#/.NET que monitora a cotação de um ativo da B3 (Bolsa de Valores do Brasil) em tempo real (a cada 30 segundos). Quando o preço atinge um limite de compra ou venda pré-definido, ele dispara um alerta via e-mail.
 
+# Por trás do código e boas práticas
+O projeto foi refatorado para aderir a padrões de engenharia de software e segurança:
+### Arquitetura e Padrões (SOLID e DI)
+- SOLID e Injeção de Dependência: utilização do Microsoft.Extensions.Hosting para montar um contêiner de injeção de dependência, garantindo baixo acoplamento.
+- Divisão de Responsabilidades: o código é dividido em interfaces (ICotacaoService, IEmailService) e implementações concretas, o que facilita a manutenção e a substituição futura de serviços.
+- Robustez: implementação de lógica para evitar o envio de e-mails repetidos no mesmo limite de preço, prevenindo spam.
+
+### Segurança e Flexibilidade
+- Segurança (Variáveis de Ambiente): as credenciais sensíveis (chaves de API, senhas SMTP) são carregadas exclusivamente do arquivo .env (ignorando-as no Git), em conformidade com as melhores práticas de segurança.
+- Flexibilidade de Uso: a aplicação aceita um quarto parâmetro na linha de comando para o e-mail de destino, permitindo alertar qualquer pessoa sem a necessidade de alterar arquivos de configuração.
+
 # Pré-requisitos para rodar
 Para executar este projeto, você precisará ter o .NET SDK instalado em sua máquina.
 - .NET SDK (versão 6.0 ou superior)
